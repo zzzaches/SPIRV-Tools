@@ -1,0 +1,1724 @@
+Below is all the contents of our docs: 
+
+
+
+ This is the content for the doc CODE_OF_CONDUCT.md 
+
+ A reminder that this issue tracker is managed by the Khronos Group. Interactions here should follow the Khronos Code of Conduct (https://www.khronos.org/developers/code-of-conduct), which prohibits aggressive or derogatory language. Please keep the discussion friendly and civil.
+
+
+ This is the content for the doc CONTRIBUTING.md 
+
+ # Contributing to SPIR-V Tools
+
+## For users: Reporting bugs and requesting features
+
+We organize known future work in GitHub projects. See
+[Tracking SPIRV-Tools work with GitHub projects](https://github.com/KhronosGroup/SPIRV-Tools/blob/main/docs/projects.md)
+for more.
+
+To report a new bug or request a new feature, please file a GitHub issue. Please
+ensure the bug has not already been reported by searching
+[issues](https://github.com/KhronosGroup/SPIRV-Tools/issues) and
+[projects](https://github.com/KhronosGroup/SPIRV-Tools/projects). If the bug has
+not already been reported open a new one
+[here](https://github.com/KhronosGroup/SPIRV-Tools/issues/new).
+
+When opening a new issue for a bug, make sure you provide the following:
+
+*   A clear and descriptive title.
+    *   We want a title that will make it easy for people to remember what the
+        issue is about. Simply using "Segfault in spirv-opt" is not helpful
+        because there could be (but hopefully aren't) multiple bugs with
+        segmentation faults with different causes.
+*   A test case that exposes the bug, with the steps and commands to reproduce
+    it.
+    *   The easier it is for a developer to reproduce the problem, the quicker a
+        fix can be found and verified. It will also make it easier for someone
+        to possibly realize the bug is related to another issue.
+
+For feature requests, we use
+[issues](https://github.com/KhronosGroup/SPIRV-Tools/issues) as well. Please
+create a new issue, as with bugs. In the issue provide
+
+*   A description of the problem that needs to be solved.
+*   Examples that demonstrate the problem.
+
+## For developers: Contributing a patch
+
+Before we can use your code, you must sign the
+[Khronos Open Source Contributor License Agreement](https://cla-assistant.io/KhronosGroup/SPIRV-Tools)
+(CLA), which you can do online. The CLA is necessary mainly because you own the
+copyright to your changes, even after your contribution becomes part of our
+codebase, so we need your permission to use and distribute your code. We also
+need to be sure of various other things -- for instance that you'll tell us if
+you know that your code infringes on other people's patents. You don't have to
+sign the CLA until after you've submitted your code for review and a member has
+approved it, but you must do it before we can put your code into our codebase.
+
+See
+[README.md](https://github.com/KhronosGroup/SPIRV-Tools/blob/main/README.md)
+for instruction on how to get, build, and test the source. Once you have made
+your changes:
+
+*   Ensure the code follows the
+    [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+    Running `clang-format -style=file -i [modified-files]` can help.
+*   Create a pull request (PR) with your patch.
+*   Make sure the PR description clearly identified the problem, explains the
+    solution, and references the issue if applicable.
+*   If your patch completely fixes bug 1234, the commit message should say
+    `Fixes https://github.com/KhronosGroup/SPIRV-Tools/issues/1234` When you do
+    this, the issue will be closed automatically when the commit goes into
+    main. Also, this helps us update the [CHANGES](CHANGES) file.
+*   Watch the continuous builds to make sure they pass.
+*   Request a code review.
+
+The reviewer can either approve your PR or request changes. If changes are
+requested:
+
+*   Please add new commits to your branch, instead of amending your commit.
+    Adding new commits makes it easier for the reviewer to see what has changed
+    since the last review.
+*   Once you are ready for another round of reviews, add a comment at the
+    bottom, such as "Ready for review" or "Please take a look" (or "PTAL"). This
+    explicit handoff is useful when responding with multiple small commits.
+
+After the PR has been reviewed it is the job of the reviewer to merge the PR.
+Instructions for this are given below.
+
+## For maintainers: Reviewing a PR
+
+The formal code reviews are done on GitHub. Reviewers are to look for all of the
+usual things:
+
+*   Coding style follows the
+    [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
+*   Identify potential functional problems.
+*   Identify code duplication.
+*   Ensure the unit tests have enough coverage.
+*   Ensure continuous integration (CI) bots run on the PR. If not run (in the
+    case of PRs by external contributors), add the "kokoro:run" label to the
+    pull request which will trigger running all CI jobs.
+
+When looking for functional problems, there are some common problems reviewers
+should pay particular attention to:
+
+*   Does the code work for both Shader (Vulkan and OpenGL) and Kernel (OpenCL)
+    scenarios? The respective SPIR-V dialects are slightly different.
+*   Changes are made to a container while iterating through it. You have to be
+    careful that iterators are not invalidated or that elements are not skipped.
+*   For SPIR-V transforms: The module is changed, but the analyses are not
+    updated. For example, a new instruction is added, but the def-use manager is
+    not updated. Later on, it is possible that the def-use manager will be used,
+    and give wrong results.
+*   If a pass gets the id of a type from the type manager, make sure the type is
+    not a struct or array. It there are two structs that look the same, the type
+    manager can return the wrong one.
+
+## For maintainers: Merging a PR
+
+We intend to maintain a linear history on the GitHub main branch, and the
+build and its tests should pass at each commit in that history. A linear
+always-working history is easier to understand and to bisect in case we want to
+find which commit introduced a bug. The
+[Squash and Merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-commits)
+button on the GitHub web interface. All other ways of merging on the web
+interface have been disabled.
+
+Before merging, we generally require:
+
+1.  All tests except for the smoke test pass. See
+    [failing smoke test](#failing-smoke-test).
+1.  The PR is approved by at least one of the maintainers. If the PR modifies
+    different parts of the code, then multiple reviewers might be necessary.
+
+The squash-and-merge button will turn green when these requirements are met.
+Maintainers have the to power to merge even if the button is not green, but that
+is discouraged.
+
+### Failing smoke test
+
+The purpose of the smoke test is to let us know if
+[shaderc](https://github.com/google/shaderc) fails to build with the change. If
+it fails, the maintainer needs to determine if the reason for the failure is a
+problem in the current PR or if another repository needs to be changed. Most of
+the time [Glslang](https://github.com/KhronosGroup/glslang) needs to be updated
+to account for the change in SPIR-V Tools.
+
+The PR can still be merged if the problem is not with that PR.
+
+## For maintainers: Running tests
+
+For security reasons, not all tests will run automatically. When they do not, a
+maintainer will have to start the tests.
+
+If the Github actions tests do not run on a PR, they can be initiated by closing
+and reopening the PR.
+
+If the kokoro tests are not run, they can be run by adding the label
+`kokoro:run` to the PR.
+
+
+ This is the content for the doc README.md 
+
+ # SPIR-V Tools
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/KhronosGroup/SPIRV-Tools/badge)](https://securityscorecards.dev/viewer/?uri=github.com/KhronosGroup/SPIRV-Tools)
+
+NEWS 2023-01-11: Development occurs on the `main` branch.
+
+## Overview
+
+The SPIR-V Tools project provides an API and commands for processing SPIR-V
+modules.
+
+The project includes an assembler, binary module parser, disassembler,
+validator, and optimizer for SPIR-V. Except for the optimizer, all are based
+on a common static library.  The library contains all of the implementation
+details, and is used in the standalone tools whilst also enabling integration
+into other code bases directly. The optimizer implementation resides in its
+own library, which depends on the core library.
+
+The interfaces have stabilized:
+We don't anticipate making a breaking change for existing features.
+
+SPIR-V is defined by the Khronos Group Inc.
+See the [SPIR-V Registry][spirv-registry] for the SPIR-V specification,
+headers, and XML registry.
+
+## Downloads
+
+The official releases for SPIRV-Tools can be found on LunarG's
+[SDK download page](https://vulkan.lunarg.com/sdk/home).
+
+For convenience, here are also links to the latest builds (HEAD).
+Those are untested automated builds. Those are not official releases, nor
+are guaranteed to work. Official releases builds are in the Vulkan SDK.
+
+<img alt="Linux" src="kokoro/img/linux.png" width="20px" height="20px" hspace="2px"/>[![Linux Build Status](https://storage.googleapis.com/spirv-tools/badges/build_status_linux_clang_release.svg)](https://storage.googleapis.com/spirv-tools/badges/build_link_linux_clang_release.html)
+<img alt="MacOS" src="kokoro/img/macos.png" width="20px" height="20px" hspace="2px"/>[![MacOS Build Status](https://storage.googleapis.com/spirv-tools/badges/build_status_macos_clang_release.svg)](https://storage.googleapis.com/spirv-tools/badges/build_link_macos_clang_release.html)
+<img alt="Windows" src="kokoro/img/windows.png" width="20px" height="20px" hspace="2px"/>[![Windows Build Status](https://storage.googleapis.com/spirv-tools/badges/build_status_windows_vs2022_release.svg)](https://storage.googleapis.com/spirv-tools/badges/build_link_windows_vs2022_release.html)
+
+[More downloads](docs/downloads.md)
+
+## Versioning SPIRV-Tools
+
+See [`CHANGES`](CHANGES) for a high level summary of recent changes, by version.
+
+SPIRV-Tools project version numbers are of the form `v`*year*`.`*index* and with
+an optional `-dev` suffix to indicate work in progress.  For example, the
+following versions are ordered from oldest to newest:
+
+* `v2016.0`
+* `v2016.1-dev`
+* `v2016.1`
+* `v2016.2-dev`
+* `v2016.2`
+
+Use the `--version` option on each command line tool to see the software
+version.  An API call reports the software version as a C-style string.
+
+## Releases
+
+The official releases for SPIRV-Tools can be found on LunarG's
+[SDK download page](https://vulkan.lunarg.com/sdk/home).
+
+You can find either the prebuilt, and QA tested binaries, or download the
+SDK Config, which lists the commits to use to build the release from scratch.
+
+GitHub releases are deprecated, and we will not publish new releases until
+further notice.
+
+## Supported features
+
+### Assembler, binary parser, and disassembler
+
+* Support for SPIR-V 1.0, through 1.5
+  * Based on SPIR-V syntax described by JSON grammar files in the
+    [SPIRV-Headers](https://github.com/KhronosGroup/SPIRV-Headers) repository.
+  * Usually, support for a new version of SPIR-V is ready within days after
+    publication.
+* Support for extended instruction sets:
+  * GLSL std450 version 1.0 Rev 3
+  * OpenCL version 1.0 Rev 2
+* Assembler only does basic syntax checking.  No cross validation of
+  IDs or types is performed, except to check literal arguments to
+  `OpConstant`, `OpSpecConstant`, and `OpSwitch`.
+* Where tools expect binary input, a hex stream may be provided instead.  See
+  `spirv-dis --help`.
+
+See [`docs/syntax.md`](docs/syntax.md) for the assembly language syntax.
+
+### Validator
+
+The validator checks validation rules described by the SPIR-V specification.
+
+Khronos recommends that tools that create or transform SPIR-V modules use the
+validator to ensure their outputs are valid, and that tools that consume SPIR-V
+modules optionally use the validator to protect themselves from bad inputs.
+This is especially encouraged for debug and development scenarios.
+
+The validator has one-sided error: it will only return an error when it has
+implemented a rule check and the module violates that rule.
+
+The validator is incomplete.
+See the [CHANGES](CHANGES) file for reports on completed work, and
+the [Validator
+sub-project](https://github.com/KhronosGroup/SPIRV-Tools/projects/1) for planned
+and in-progress work.
+
+*Note*: The validator checks some Universal Limits, from section 2.17 of the SPIR-V spec.
+The validator will fail on a module that exceeds those minimum upper bound limits.
+The validator has been parameterized to allow larger values, for use when targeting 
+a more-than-minimally-capable SPIR-V consumer.
+
+See [`tools/val/val.cpp`](tools/val/val.cpp) or run `spirv-val --help` for the command-line help.
+
+### Optimizer
+
+The optimizer is a collection of code transforms, or "passes".
+Transforms are written for a diverse set of reasons:
+
+* To restructure, simplify, or normalize the code for further processing.
+* To eliminate undesirable code.
+* To improve code quality in some metric such as size or performance.
+  **Note**: These transforms are not guaranteed to actually improve any
+  given metric. Users should always measure results for their own situation.
+
+As of this writing, there are 67 transforms including examples such as:
+* Simplification
+  * Strip debug info
+  * Strip reflection info
+* Specialization Constants
+  * Set spec constant default value
+  * Freeze spec constant to default value
+  * Fold `OpSpecConstantOp` and `OpSpecConstantComposite`
+  * Unify constants
+  * Eliminate dead constant
+* Code Reduction
+  * Inline all function calls exhaustively
+  * Convert local access chains to inserts/extracts
+  * Eliminate local load/store in single block
+  * Eliminate local load/store with single store
+  * Eliminate local load/store with multiple stores
+  * Eliminate local extract from insert
+  * Eliminate dead instructions (aggressive)
+  * Eliminate dead branches
+  * Merge single successor / single predecessor block pairs
+  * Eliminate common uniform loads
+  * Remove duplicates: Capabilities, extended instruction imports, types, and
+    decorations.
+* Normalization
+  * Compact IDs
+  * CFG cleanup
+  * Flatten decorations
+  * Merge returns
+  * Convert AMD-specific instructions to KHR instructions
+* Code improvement
+  * Conditional constant propagation
+  * If-conversion
+  * Loop fission
+  * Loop fusion
+  * Loop-invariant code motion
+  * Loop unroll
+* Other
+  * Graphics robust access
+  * Upgrade memory model to VulkanKHR
+
+Additionally, certain sets of transformations have been packaged into
+higher-level recipes.  These include:
+
+* Optimization for size (`spirv-opt -Os`)
+* Optimization for performance (`spirv-opt -O`)
+
+For the latest list with detailed documentation, please refer to
+[`include/spirv-tools/optimizer.hpp`](include/spirv-tools/optimizer.hpp).
+
+For suggestions on using the code reduction options, please refer to this [white paper](https://www.lunarg.com/shader-compiler-technologies/white-paper-spirv-opt/).
+
+
+### Linker
+
+*Note:* The linker is still under development.
+
+Current features:
+* Combine multiple SPIR-V binary modules together.
+* Combine into a library (exports are retained) or an executable (no symbols
+  are exported).
+
+See the [CHANGES](CHANGES) file for reports on completed work, and the [General
+sub-project](https://github.com/KhronosGroup/SPIRV-Tools/projects/2) for
+planned and in-progress work.
+
+
+### Reducer
+
+*Note:* The reducer is still under development.
+
+The reducer simplifies and shrinks a SPIR-V module with respect to a
+user-supplied *interestingness function*.  For example, given a large
+SPIR-V module that cause some SPIR-V compiler to fail with a given
+fatal error message, the reducer could be used to look for a smaller
+version of the module that causes the compiler to fail with the same
+fatal error message.
+
+To suggest an additional capability for the reducer, [file an
+issue](https://github.com/KhronosGroup/SPIRV-Tools/issues]) with
+"Reducer:" as the start of its title.
+
+
+### Fuzzer
+
+*Note:* The fuzzer is still under development.
+
+The fuzzer applies semantics-preserving transformations to a SPIR-V binary
+module, to produce an equivalent module.  The original and transformed modules
+should produce essentially identical results when executed on identical inputs:
+their results should differ only due to floating-point round-off, if at all.
+Significant differences in results can pinpoint bugs in tools that process
+SPIR-V binaries, such as miscompilations.  This *metamorphic testing* approach
+is similar to the method used by the [GraphicsFuzz
+project](https://github.com/google/graphicsfuzz) for fuzzing of GLSL shaders.
+
+To suggest an additional capability for the fuzzer, [file an
+issue](https://github.com/KhronosGroup/SPIRV-Tools/issues]) with
+"Fuzzer:" as the start of its title.
+
+
+### Diff
+
+*Note:* The diff tool is still under development.
+
+The diff tool takes two SPIR-V files, either in binary or text format and
+produces a diff-style comparison between the two.  The instructions between the
+src and dst modules are matched as best as the tool can, and output is produced
+(in src id-space) that shows which instructions are removed in src, added in dst
+or modified between them.  The order of instructions are not retained.
+
+Matching instructions between two SPIR-V modules is not trivial, and thus a
+number of heuristics are applied in this tool.  In particular, without debug
+information, match functions is nontrivial as they can be reordered.  As such,
+this tool is primarily useful to produce the diff of two SPIR-V modules derived
+from the same source, for example before and after a modification to the shader,
+before and after a transformation, or SPIR-V produced from different tools.
+
+
+### Extras
+
+* [Utility filters](#utility-filters)
+* Build target `spirv-tools-vimsyntax` generates file `spvasm.vim`.
+  Copy that file into your `$HOME/.vim/syntax` directory to get SPIR-V assembly syntax
+  highlighting in Vim.  This build target is not built by default.
+
+## Contributing
+
+The SPIR-V Tools project is maintained by members of the The Khronos Group Inc.,
+and is hosted at https://github.com/KhronosGroup/SPIRV-Tools.
+
+Consider joining the `public_spirv_tools_dev@khronos.org` mailing list, via
+[https://www.khronos.org/spir/spirv-tools-mailing-list/](https://www.khronos.org/spir/spirv-tools-mailing-list/).
+The mailing list is used to discuss development plans for the SPIRV-Tools as an open source project.
+Once discussion is resolved,
+specific work is tracked via issues and sometimes in one of the
+[projects][spirv-tools-projects].
+
+(To provide feedback on the SPIR-V _specification_, file an issue on the
+[SPIRV-Headers][spirv-headers] GitHub repository.)
+
+See [`docs/projects.md`](docs/projects.md) to see how we use the
+[GitHub Project
+feature](https://help.github.com/articles/tracking-the-progress-of-your-work-with-projects/)
+to organize planned and in-progress work.
+
+Contributions via merge request are welcome. Changes should:
+* Be provided under the [Apache 2.0](#license).
+* You'll be prompted with a one-time "click-through"
+  [Khronos Open Source Contributor License Agreement][spirv-tools-cla]
+  (CLA) dialog as part of submitting your pull request or
+  other contribution to GitHub.
+* Include tests to cover updated functionality.
+* C++ code should follow the [Google C++ Style Guide][cpp-style-guide].
+* Code should be formatted with `clang-format`.
+  [kokoro/check-format/build.sh](kokoro/check-format/build.sh)
+  shows how to download it. Note that we currently use
+  `clang-format version 5.0.0` for SPIRV-Tools. Settings are defined by
+  the included [.clang-format](.clang-format) file.
+
+We intend to maintain a linear history on the GitHub `main` branch.
+
+### Getting the source
+
+Example of getting sources, assuming SPIRV-Tools is configured as a standalone project:
+
+    git clone https://github.com/KhronosGroup/SPIRV-Tools.git   spirv-tools
+    cd spirv-tools
+
+    # Check out sources for dependencies, at versions known to work together,
+    # as listed in the DEPS file.
+    python3 utils/git-sync-deps
+
+For some kinds of development, you may need the latest sources from the third-party projects:
+
+    git clone https://github.com/KhronosGroup/SPIRV-Headers.git spirv-tools/external/spirv-headers
+    git clone https://github.com/google/googletest.git          spirv-tools/external/googletest
+    git clone https://github.com/google/effcee.git              spirv-tools/external/effcee
+    git clone https://github.com/google/re2.git                 spirv-tools/external/re2
+    git clone https://github.com/abseil/abseil-cpp.git          spirv-tools/external/abseil_cpp
+
+#### Dependency on Effcee
+
+Some tests depend on the [Effcee][effcee] library for stateful matching.
+Effcee itself depends on [RE2][re2], and RE2 depends on [Abseil][abseil-cpp].
+
+* If SPIRV-Tools is configured as part of a larger project that already uses
+  Effcee, then that project should include Effcee before SPIRV-Tools.
+* Otherwise, SPIRV-Tools expects Effcee sources to appear in `external/effcee`,
+  RE2 sources to appear in `external/re2`, and Abseil sources to appear in 
+  `external/abseil_cpp`.
+
+### Source code organization
+
+* `example`: demo code of using SPIRV-Tools APIs
+* `external/googletest`: Intended location for the
+  [googletest][googletest] sources, not provided
+* `external/effcee`: Location of [Effcee][effcee] sources, if the `effcee` library
+  is not already configured by an enclosing project.
+* `external/re2`: Location of [RE2][re2] sources, if the `re2` library is not already
+  configured by an enclosing project.
+  (The Effcee project already requires RE2.)
+* `external/abseil_cpp`: Location of [Abseil][abseil-cpp] sources, if Abseil is
+   not already configured by an enclosing project.
+  (The RE2 project already requires Abseil.)
+* `include/`: API clients should add this directory to the include search path
+* `external/spirv-headers`: Intended location for
+  [SPIR-V headers][spirv-headers], not provided
+* `include/spirv-tools/libspirv.h`: C API public interface
+* `source/`: API implementation
+* `test/`: Tests, using the [googletest][googletest] framework
+* `tools/`: Command line executables
+
+### Tests
+
+The project contains a number of tests, used to drive development
+and ensure correctness.  The tests are written using the
+[googletest][googletest] framework.  The `googletest`
+source is not provided with this project.  There are two ways to enable
+tests:
+* If SPIR-V Tools is configured as part of an enclosing project, then the
+  enclosing project should configure `googletest` before configuring SPIR-V Tools.
+* If SPIR-V Tools is configured as a standalone project, then download the
+  `googletest` source into the `<spirv-dir>/external/googletest` directory before
+  configuring and building the project.
+
+## Build
+
+*Note*: Prebuilt binaries are available from the [downloads](docs/downloads.md) page.
+
+First [get the sources](#getting-the-source).
+Then build using CMake, Bazel, Android ndk-build, or the Emscripten SDK.
+
+### Build using CMake
+You can build the project using [CMake][cmake]:
+
+```sh
+cd <spirv-dir>
+mkdir build && cd build
+cmake [-G <platform-generator>] <spirv-dir>
+```
+
+Once the build files have been generated, build using the appropriate build
+command (e.g. `ninja`, `make`, `msbuild`, etc.; this depends on the platform
+generator used above), or use your IDE, or use CMake to run the appropriate build
+command for you:
+
+```sh
+cmake --build . [--config Debug]  # runs `make` or `ninja` or `msbuild` etc.
+```
+
+#### Note about the fuzzer
+
+The SPIR-V fuzzer, `spirv-fuzz`, can only be built via CMake, and is disabled by
+default. To build it, clone protobuf and use the `SPIRV_BUILD_FUZZER` CMake
+option, like so:
+
+```sh
+# In <spirv-dir> (the SPIRV-Tools repo root):
+git clone --depth=1 --branch v3.13.0.1 https://github.com/protocolbuffers/protobuf external/protobuf
+
+# In your build directory:
+cmake [-G <platform-generator>] <spirv-dir> -DSPIRV_BUILD_FUZZER=ON
+cmake --build . --config Debug
+```
+
+You can also add `-DSPIRV_ENABLE_LONG_FUZZER_TESTS=ON` to build additional
+fuzzer tests.
+
+
+### Build using Bazel
+You can also use [Bazel](https://bazel.build/) to build the project.
+
+```sh
+bazel build :all
+```
+
+### Build a node.js package using Emscripten
+
+The SPIRV-Tools core library can be built to a WebAssembly [node.js](https://nodejs.org)
+module. The resulting `SpirvTools` WebAssembly module only exports methods to
+assemble and disassemble SPIR-V modules.
+
+First, make sure you have the [Emscripten SDK](https://emscripten.org).
+Then:
+
+```sh
+cd <spirv-dir>
+./source/wasm/build.sh
+```
+
+The resulting node package, with JavaScript and TypeScript bindings, is
+written to `<spirv-dir>/out/web`.
+
+Note: This builds the package locally. It does *not* publish it to [npm](https://npmjs.org).
+
+To test the result:
+
+```sh
+node ./test/wasm/test.js
+```
+
+### Tools you'll need
+
+For building and testing SPIRV-Tools, the following tools should be
+installed regardless of your OS:
+
+- [CMake](http://www.cmake.org/): if using CMake for generating compilation
+targets, you need to install CMake Version 2.8.12 or later.
+- [Python 3](http://www.python.org/): for utility scripts and running the test
+suite.
+- [Bazel](https://bazel.build/) (optional): if building the source with Bazel,
+you need to install Bazel Version 7.0.2 on your machine. Other versions may
+also work, but are not verified.
+- [Emscripten SDK](https://emscripten.org) (optional): if building the
+  WebAssembly module.
+
+SPIRV-Tools is regularly tested with the following compilers:
+
+On Linux
+- GCC version 9.4
+- Clang version 10.0
+
+On MacOS
+- AppleClang 15.0
+
+On Windows
+- Visual Studio 2019
+- Visual Studio 2022
+
+Note: Other compilers or later versions may work, but they are not tested.
+
+### CMake options
+
+The following CMake options are supported:
+
+* `SPIRV_BUILD_FUZZER={ON|OFF}`, default `OFF` - Build the spirv-fuzz tool.
+* `SPIRV_COLOR_TERMINAL={ON|OFF}`, default `ON` - Enables color console output.
+* `SPIRV_SKIP_TESTS={ON|OFF}`, default `OFF`- Build only the library and
+  the command line tools.  This will prevent the tests from being built.
+* `SPIRV_SKIP_EXECUTABLES={ON|OFF}`, default `OFF`- Build only the library, not
+  the command line tools and tests.
+* `SPIRV_USE_SANITIZER=<sanitizer>`, default is no sanitizing - On UNIX
+  platforms with an appropriate version of `clang` this option enables the use
+  of the sanitizers documented [here][clang-sanitizers].
+  This should only be used with a debug build.
+* `SPIRV_WARN_EVERYTHING={ON|OFF}`, default `OFF` - On UNIX platforms enable
+  more strict warnings.  The code might not compile with this option enabled.
+  For Clang, enables `-Weverything`.  For GCC, enables `-Wpedantic`.
+  See [`CMakeLists.txt`](CMakeLists.txt) for details.
+* `SPIRV_WERROR={ON|OFF}`, default `ON` - Forces a compilation error on any
+  warnings encountered by enabling the compiler-specific compiler front-end
+  option.  No compiler front-end options are enabled when this option is OFF.
+
+Additionally, you can pass additional C preprocessor definitions to SPIRV-Tools
+via setting `SPIRV_TOOLS_EXTRA_DEFINITIONS`. For example, by setting it to
+`/D_ITERATOR_DEBUG_LEVEL=0` on Windows, you can disable checked iterators and
+iterator debugging.
+
+### Android ndk-build
+
+SPIR-V Tools supports building static libraries `libSPIRV-Tools.a` and
+`libSPIRV-Tools-opt.a` for Android.  Using the Android NDK r25c or later:
+
+```
+cd <spirv-dir>
+
+export ANDROID_NDK=/path/to/your/ndk   # NDK r25c or later
+
+mkdir build && cd build
+mkdir libs
+mkdir app
+
+$ANDROID_NDK/ndk-build -C ../android_test     \
+                      NDK_PROJECT_PATH=.      \
+                      NDK_LIBS_OUT=`pwd`/libs \
+                      NDK_APP_OUT=`pwd`/app
+```
+
+### Updating DEPS
+
+Occasionally the entries in [DEPS](DEPS) will need to be updated. This is done on
+demand when there is a request to do this, often due to downstream breakages.
+To update `DEPS`, run `utils/roll_deps.sh` and confirm that tests pass.
+The script requires Chromium's
+[`depot_tools`](https://chromium.googlesource.com/chromium/tools/depot_tools).
+
+## Library
+
+### Usage
+
+The internals of the library use C++17 features, and are exposed via both a C
+and C++ API.
+
+In order to use the library from an application, the include path should point
+to `<spirv-dir>/include`, which will enable the application to include the
+header `<spirv-dir>/include/spirv-tools/libspirv.h{|pp}` then linking against
+the static library in `<spirv-build-dir>/source/libSPIRV-Tools.a` or
+`<spirv-build-dir>/source/SPIRV-Tools.lib`.
+For optimization, the header file is
+`<spirv-dir>/include/spirv-tools/optimizer.hpp`, and the static library is
+`<spirv-build-dir>/source/libSPIRV-Tools-opt.a` or
+`<spirv-build-dir>/source/SPIRV-Tools-opt.lib`.
+
+* `SPIRV-Tools` CMake target: Creates the static library:
+  * `<spirv-build-dir>/source/libSPIRV-Tools.a` on Linux and OS X.
+  * `<spirv-build-dir>/source/libSPIRV-Tools.lib` on Windows.
+* `SPIRV-Tools-opt` CMake target: Creates the static library:
+  * `<spirv-build-dir>/source/libSPIRV-Tools-opt.a` on Linux and OS X.
+  * `<spirv-build-dir>/source/libSPIRV-Tools-opt.lib` on Windows.
+
+#### Entry points
+
+The interfaces are still under development, and are expected to change.
+
+There are five main entry points into the library in the C interface:
+
+* `spvTextToBinary`: An assembler, translating text to a binary SPIR-V module.
+* `spvBinaryToText`: A disassembler, translating a binary SPIR-V module to
+  text.
+* `spvBinaryParse`: The entry point to a binary parser API.  It issues callbacks
+  for the header and each parsed instruction.  The disassembler is implemented
+  as a client of `spvBinaryParse`.
+* `spvValidate` implements the validator functionality. *Incomplete*
+* `spvValidateBinary` implements the validator functionality. *Incomplete*
+
+The C++ interface is comprised of three classes, `SpirvTools`, `Optimizer` and
+`Linker`, all in the `spvtools` namespace.
+* `SpirvTools` provides `Assemble`, `Disassemble`, and `Validate` methods.
+* `Optimizer` provides methods for registering and running optimization passes.
+* `Linker` provides methods for combining together multiple binaries.
+
+## Command line tools
+
+Command line tools, which wrap the above library functions, are provided to
+assemble or disassemble shader files.  It's a convention to name SPIR-V
+assembly and binary files with suffix `.spvasm` and `.spv`, respectively.
+
+### Assembler tool
+
+The assembler reads the assembly language text, and emits the binary form.
+
+The standalone assembler is the executable called `spirv-as`, and is located in
+`<spirv-build-dir>/tools/spirv-as`.  The functionality of the assembler is implemented
+by the `spvTextToBinary` library function.
+
+* `spirv-as` - the standalone assembler
+  * `<spirv-dir>/tools/as`
+
+Use option `-h` to print help.
+
+### Disassembler tool
+
+The disassembler reads the binary form, and emits assembly language text.
+
+The standalone disassembler is the executable called `spirv-dis`, and is located in
+`<spirv-build-dir>/tools/spirv-dis`. The functionality of the disassembler is implemented
+by the `spvBinaryToText` library function.
+
+* `spirv-dis` - the standalone disassembler
+  * `<spirv-dir>/tools/dis`
+
+Use option `-h` to print help.
+
+The output includes syntax colouring when printing to the standard output stream,
+on Linux, Windows, and OS X.
+
+### Linker tool
+
+The linker combines multiple SPIR-V binary modules together, resulting in a single
+binary module as output.
+
+This is a work in progress.
+The linker does not support OpenCL program linking options related to math
+flags. (See section 5.6.5.2 in OpenCL 1.2)
+
+* `spirv-link` - the standalone linker
+  * `<spirv-dir>/tools/link`
+
+### Optimizer tool
+
+The optimizer processes a SPIR-V binary module, applying transformations
+in the specified order.
+
+This is a work in progress, with initially only few available transformations.
+
+* `spirv-opt` - the standalone optimizer
+  * `<spirv-dir>/tools/opt`
+
+### Validator tool
+
+*Warning:* This functionality is under development, and is incomplete.
+
+The standalone validator is the executable called `spirv-val`, and is located in
+`<spirv-build-dir>/tools/spirv-val`. The functionality of the validator is implemented
+by the `spvValidate` library function.
+
+The validator operates on the binary form.
+
+* `spirv-val` - the standalone validator
+  * `<spirv-dir>/tools/val`
+
+### Reducer tool
+
+The reducer shrinks a SPIR-V binary module, guided by a user-supplied
+*interestingness test*.
+
+This is a work in progress, with initially only shrinks a module in a few ways.
+
+* `spirv-reduce` - the standalone reducer
+  * `<spirv-dir>/tools/reduce`
+
+Run `spirv-reduce --help` to see how to specify interestingness.
+
+### Fuzzer tool
+
+The fuzzer transforms a SPIR-V binary module into a semantically-equivalent
+SPIR-V binary module by applying transformations in a randomized fashion.
+
+This is a work in progress, with initially only a few semantics-preserving
+transformations.
+
+* `spirv-fuzz` - the standalone fuzzer
+  * `<spirv-dir>/tools/fuzz`
+
+Run `spirv-fuzz --help` for a detailed list of options.
+
+### Control flow dumper tool
+
+The control flow dumper prints the control flow graph for a SPIR-V module as a
+[GraphViz](http://www.graphviz.org/) graph.
+
+This is experimental.
+
+* `spirv-cfg` - the control flow graph dumper
+  * `<spirv-dir>/tools/cfg`
+
+### Diff tool
+
+*Warning:* This functionality is under development, and is incomplete.
+
+The diff tool produces a diff-style comparison between two SPIR-V modules.
+
+* `spirv-diff` - the standalone diff tool
+  * `<spirv-dir>`/tools/diff`
+
+### Utility filters
+
+* `spirv-lesspipe.sh` - Automatically disassembles `.spv` binary files for the
+  `less` program, on compatible systems.  For example, set the `LESSOPEN`
+  environment variable as follows, assuming both `spirv-lesspipe.sh` and
+  `spirv-dis` are on your executable search path:
+  ```
+   export LESSOPEN='| spirv-lesspipe.sh "%s"'
+  ```
+  Then you page through a disassembled module as follows:
+  ```
+  less foo.spv
+  ```
+  * The `spirv-lesspipe.sh` script will pass through any extra arguments to
+    `spirv-dis`.  So, for example, you can turn off colours and friendly ID
+    naming as follows:
+    ```
+    export LESSOPEN='| spirv-lesspipe.sh "%s" --no-color --raw-id'
+    ```
+
+* [vim-spirv](https://github.com/kbenzie/vim-spirv) - A vim plugin which
+  supports automatic disassembly of `.spv` files using the `:edit` command and
+  assembly using the `:write` command. The plugin also provides additional
+  features which include; syntax highlighting; highlighting of all ID's matching
+  the ID under the cursor; and highlighting errors where the `Instruction`
+  operand of `OpExtInst` is used without an appropriate `OpExtInstImport`.
+
+* `50spirv-tools.el` - Automatically disassembles '.spv' binary files when
+  loaded into the emacs text editor, and re-assembles them when saved,
+  provided any modifications to the file are valid.  This functionality
+  must be explicitly requested by defining the symbol
+  SPIRV_TOOLS_INSTALL_EMACS_HELPERS as follows:
+  ```
+  cmake -DSPIRV_TOOLS_INSTALL_EMACS_HELPERS=true ...
+  ```
+
+  In addition, this helper is only installed if the directory /etc/emacs/site-start.d
+  exists, which is typically true if emacs is installed on the system.
+
+  Note that symbol IDs are not currently preserved through a load/edit/save operation.
+  This may change if the ability is added to spirv-as.
+
+
+### Tests
+
+Tests are only built when googletest is found.
+
+#### Running test with CMake
+
+Use `ctest -j <num threads>` to run all the tests. To run tests using all threads:
+```shell
+ctest -j$(nproc)
+```
+
+To run a single test target, use `ctest [-j <N>] -R <test regex>`. For example,
+you can run all `opt` tests with:
+```shell
+ctest -R 'spirv-tools-test_opt'
+```
+
+#### Running test with Bazel
+
+Use `bazel test :all` to run all tests. This will run tests in parallel by default.
+
+To run a single test target, specify `:my_test_target` instead of `:all`. Test target
+names get printed when you run `bazel test :all`. For example, you can run
+`opt_def_use_test` with:
+
+on linux:
+```shell
+bazel test --cxxopt=-std=c++17 :opt_def_use_test
+```
+
+on windows:
+```shell
+bazel test --cxxopt=/std:c++17 :opt_def_use_test
+```
+
+## Future Work
+<a name="future"></a>
+
+_See the [projects pages](https://github.com/KhronosGroup/SPIRV-Tools/projects)
+for more information._
+
+### Assembler and disassembler
+
+* The disassembler could emit helpful annotations in comments.  For example:
+  * Use variable name information from debug instructions to annotate
+    key operations on variables.
+  * Show control flow information by annotating `OpLabel` instructions with
+    that basic block's predecessors.
+* Error messages could be improved.
+
+### Validator
+
+This is a work in progress.
+
+### Linker
+
+* The linker could accept math transformations such as allowing MADs, or other
+  math flags passed at linking-time in OpenCL.
+* Linkage attributes can not be applied through a group.
+* Check decorations of linked functions attributes.
+* Remove dead instructions, such as OpName targeting imported symbols.
+
+## Licence
+<a name="license"></a>
+Full license terms are in [LICENSE](LICENSE)
+```
+Copyright (c) 2015-2016 The Khronos Group Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+[spirv-tools-cla]: https://cla-assistant.io/KhronosGroup/SPIRV-Tools
+[spirv-tools-projects]: https://github.com/KhronosGroup/SPIRV-Tools/projects
+[spirv-tools-mailing-list]: https://www.khronos.org/spir/spirv-tools-mailing-list
+[spirv-registry]: https://www.khronos.org/registry/spir-v/
+[spirv-headers]: https://github.com/KhronosGroup/SPIRV-Headers
+[googletest]: https://github.com/google/googletest
+[googletest-pull-612]: https://github.com/google/googletest/pull/612
+[googletest-issue-610]: https://github.com/google/googletest/issues/610
+[effcee]: https://github.com/google/effcee
+[re2]: https://github.com/google/re2
+[abseil-cpp]: https://github.com/abseil/abseil-cpp
+[CMake]: https://cmake.org/
+[cpp-style-guide]: https://google.github.io/styleguide/cppguide.html
+[clang-sanitizers]: http://clang.llvm.org/docs/UsersManual.html#controlling-code-generation
+
+
+ This is the content for the doc SECURITY.md 
+
+ # Security Policy
+
+## Supported Versions
+
+Security updates are applied only to the latest release.
+
+## Reporting a Vulnerability
+
+If you have discovered a security vulnerability in this project, please report it privately. **Do not disclose it as a public issue.** This gives us time to work with you to fix the issue before public exposure, reducing the chance that the exploit will be used before a patch is released.
+
+Please disclose it at [security advisory](https://github.com/KhronosGroup/SPIRV-Tools/security/advisories/new).
+
+This project is maintained by a team of volunteers on a reasonable-effort basis. As such, please give us at least 90 days to work on a fix before public exposure.
+
+
+ This is the content for the doc docs/downloads.md 
+
+ # Downloads
+
+## Vulkan SDK
+
+The official releases for SPIRV-Tools can be found on LunarG's
+[SDK download page](https://vulkan.lunarg.com/sdk/home).
+The Vulkan SDK is updated approximately every six weeks.
+
+## Android NDK
+
+SPIRV-Tools host executables, and library sources are published as
+part of the [Android NDK](https://developer.android.com/ndk/downloads).
+
+## Automated builds
+
+For convenience, here are also links to the latest builds (HEAD).
+Those are untested automated builds. Those are not official releases, nor
+are guaranteed to work. Official releases builds are in the Android NDK or
+Vulkan SDK.
+
+Download the latest builds of the [main](https://github.com/KhronosGroup/SPIRV-Tools/tree/main) branch.
+
+| Platform | Processor | Compiler | Release build | Debug build |
+| --- | --- | --- | --- | --- |
+| Windows | x86-64 | VisualStudio 2022 (MSVC v143) | Download: <a href="https://storage.googleapis.com/spirv-tools/badges/build_link_windows_vs2022_release.html"> <img src="https://storage.googleapis.com/spirv-tools/badges/build_status_windows_vs2022_release.svg" alt="status of VS 2022 release build"></a> | Download: <a href="https://storage.googleapis.com/spirv-tools/badges/build_link_windows_vs2022_debug.html"> <img src="https://storage.googleapis.com/spirv-tools/badges/build_status_windows_vs2022_debug.svg" alt="status of VS 2022 debug build"></a> |
+| Linux | x86-64 | GCC 9.4 | Download: <a href="https://storage.googleapis.com/spirv-tools/badges/build_link_linux_gcc_release.html"> <img src="https://storage.googleapis.com/spirv-tools/badges/build_status_linux_gcc_release.svg" alt="status of Linux GCC build"></a> | Download: <a href="https://storage.googleapis.com/spirv-tools/badges/build_link_linux_gcc_debug.html"> <img src="https://storage.googleapis.com/spirv-tools/badges/build_status_linux_gcc_debug.svg" alt="status of Linux GCC debug build"></a> |
+| macOS | x86-64 | Clang 15 | Download: <a href="https://storage.googleapis.com/spirv-tools/badges/build_link_macos_clang_release.html"> <img src="https://storage.googleapis.com/spirv-tools/badges/build_status_macos_clang_release.svg" alt="status of macOS Clang build"></a> | Download: <a href="https://storage.googleapis.com/spirv-tools/badges/build_link_macos_clang_debug.html"> <img src="https://storage.googleapis.com/spirv-tools/badges/build_status_macos_clang_debug.svg" alt="status of macOS Clang build"></a> |
+
+Note: If you suspect something is wrong with the compiler versions mentioned,
+check the scripts and configurations in the [kokoro](../kokoro) source tree,
+or the results of the checks on the latest commits on the `main` branch.
+
+
+ This is the content for the doc docs/projects.md 
+
+ # Tracking SPIRV-Tools work with GitHub projects
+
+We are experimenting with using the [GitHub Project
+feature](https://help.github.com/articles/tracking-the-progress-of-your-work-with-projects/)
+to track progress toward large goals.
+
+For more on GitHub Projects in general, see:
+* [Introductory blog post](https://github.com/blog/2256-a-whole-new-github-universe-announcing-new-tools-forums-and-features)
+* [Introductory video](https://www.youtube.com/watch?v=C6MGKHkNtxU)
+
+The current SPIRV-Tools project list can be found at
+[https://github.com/KhronosGroup/SPIRV-Tools/projects](https://github.com/KhronosGroup/SPIRV-Tools/projects)
+
+## How we use a Project
+
+A GitHub Project is a set of work with an overall purpose, and
+consists of a collection of *Cards*.
+Each card is either a *Note* or a regular GitHub *Issue.*
+A Note can be converted to an Issue.
+
+In our projects, a card represents work, i.e. a change that can
+be applied to the repository.
+The work could be a feature, a bug to be fixed, documentation to be
+updated, etc.
+
+A project and its cards are used as a [Kanban
+board](https://en.wikipedia.org/wiki/Kanban_board), where cards progress
+through a workflow starting with ideas through to implementation and completion.
+
+In our usage, a *project manager* is someone who organizes the work.
+They manage the creation and movement of cards
+through the project workflow:
+* They create cards to capture ideas, or to decompose large ideas into smaller
+  ones.
+* They determine if the work for a card has been completed.
+* Normally they are the person (or persons) who can approve and merge a pull
+  request into the `main` branch.
+
+Our projects organize cards into the following columns:
+* `Ideas`: Work which could be done, captured either as Cards or Notes.
+  * A card in this column could be marked as a [PLACEHOLDER](#placeholders).
+* `Ready to start`: Issues which represent work we'd like to do, and which
+  are not blocked by other work.
+  * The issue should be narrow enough that it can usually be addressed by a
+    single pull request.
+  * We want these to be Issues (not Notes) so that someone can claim the work
+    by updating the Issue with their intent to do the work.
+    Once an Issue is claimed, the project manager moves the corresponding card
+    from `Ready to start` to `In progress`.
+* `In progress`: Issues which were in `Ready to start` but which have been
+  claimed by someone.
+* `Done`: Issues which have been resolved, by completing their work.
+  * The changes have been applied to the repository, typically by being pushed
+  into the `main` branch.
+  * Other kinds of work could update repository settings, for example.
+* `Rejected ideas`: Work which has been considered, but which we don't want
+  implemented.
+  * We keep rejected ideas so they are not proposed again. This serves
+    as a form of institutional memory.
+  * We should record why an idea is rejected. For this reason, a rejected
+    idea is likely to be an Issue which has been closed.
+
+## Prioritization
+
+We are considering prioritizing cards in the `Ideas` and `Ready to start`
+columns so that things that should be considered first float up to the top.
+
+Experience will tell us if we stick to that rule, and if it proves helpful.
+
+## Placeholders
+
+A *placeholder* is a Note or Issue that represents a possibly large amount
+of work that can be broadly defined but which may not have been broken down
+into small implementable pieces of work.
+
+Use a placeholder to capture a big idea, but without doing the upfront work
+to consider all the details of how it should be implemented.
+Over time, break off pieces of the placeholder into implementable Issues.
+Move those Issues into the `Ready to start` column when they become unblocked.
+
+We delete the placeholder when all its work has been decomposed into
+implementable cards.
+
+
+ This is the content for the doc docs/spirv-fuzz.md 
+
+ # Guide to writing a spirv-fuzz fuzzer pass
+
+Writing a spirv-fuzz fuzzer pass usually requires two main contributions:
+
+- A *transformation*, capturing a small semantics-preserving change that can be made to a SPIR-V module.  This requires adding a protobuf message representing the transformation, and a corresponding class that implements the `Transformation` interface.
+- A new *fuzzer pass* class, implementing the `FuzzerPass` interface, that knows how to walk a SPIR-V module and apply the new transformation in a randomized fashion.
+
+In some cases, more than one kind of transformation is required for a single fuzzer pass, and in some cases the transformations that a new fuzzer pass requires have already been introduced by existing passes.  But the most common case is to introduce a transformation and fuzzer pass together.
+
+As an example, let's consider the `TransformationSetSelectionControl` transformation.  In SPIR-V, an `OpSelectionMerge` instruction (which intuitively indicates the start of an `if` or `switch` statement in a function) has a *selection control* mask, that can be one of `None`, `Flatten` or `DontFlatten`.  The details of these do not matter much for this little tutorial, but in brief, this parameter provides a hint to the shader compiler as to whether it would be profitable to attempt to flatten a piece of conditional code so that all of its statements are executed in a predicated fashion.
+
+As the selection control mask is just a hint, changing the value of this mask should have no semantic impact on the module.  The `TransformationSelectionControl` transformation specifies a new value for a given selection control mask.
+
+## Adding a new protobuf message
+
+Take a look at the `Transformation` message in `spvtoolsfuzz.proto`.  This has a `oneof` field that can be any one of the different spirv-fuzz transformations.  Observe that one of the options is `TransformationSetSelectionControl`.  When adding a transformation you first need to add an option for your transformation to the end of the `oneof` declaration.
+
+Now look at the `TransformationSetSelectionControl` message.  If adding your own transformation you need to add a new message for your transformation, and it should be placed alphabetically with respect to other transformations.
+
+The fields of `TransformationSetSelectionControl` provide just enough information to (a) determine whether a given example of this transformation is actually applicable, and (b) apply the transformation in the case that it is applicable.  The details of the transformation message will vary a lot between transformations.  In this case, the message has a `block_id` field, specifying a block that must end with `OpSelectionMerge`, and a `selection_control` field, which is the new value for the selection control mask of the `OpSelectionMerge` instruction.
+
+## Adding a new transformation class
+
+If your transformation is called `TransformationSomeThing`, you need to add `transformation_some_thing.h` and `transformation_some_thing.cpp` to `source/fuzz` and the corresponding `CMakeLists.txt` file.  So for `TransformationSetSelectionControl` we have `transformation_selection_control.h` and `transformation_selection_control.cpp`, and we will use this as an example to illustrate the expected contents of these files.
+
+The header file contains the specification of a class, `TransformationSetSelectionControl`, that implements the `Transformation` interface (from `transformation.h`).
+
+A transformation class should always have a single field, which should be the associated protobuf message; in our case:
+
+```
+ private:
+  protobufs::TransformationSetSelectionControl message_;
+```
+
+and two public constructors, one that takes a protobuf message; in our case:
+
+```
+  explicit TransformationSetSelectionControl(
+      const protobufs::TransformationSetSelectionControl& message);
+```
+
+and one that takes a parameter for each protobuf message field; in our case:
+
+```
+  TransformationSetSelectionControl(uint32_t block_id);
+```
+
+The first constructor allows an instance of the class to be created from a corresponding protobuf message.  The second should provide the ingredients necessary to populate a protobuf message.
+
+The class should also override the `IsApplicable`, `Apply` and `ToMessage` methods from `Transformation`.
+
+See `transformation_set_selection_control.h` for an example.
+
+The `IsApplicable` method should have a comment in the header file describing the conditions for applicability in simple terms.  These conditions should be implemented in the body of this method in the `.cpp` file.
+
+In the case of `TransformationSetSelectionControl`, `IsApplicable` involves checking that `block_id` is indeed the id of a block that has an `OpSelectionMerge` instruction, and that `selection_control` is a valid selection mask.
+
+The `Apply` method should have a comment in the header file summarising the result of applying the transformation.  It should be implemented in the `.cpp` file, and you should assume that `IsApplicable` holds whenever `Apply` is invoked.
+
+## Writing tests for the transformation class
+
+Whenever you add a transformation class, `TransformationSomeThing`, you should add an associated test file, `transformation_some_thing_test.cpp`, under `test/fuzz`, adding it to the associated `CMakeLists.txt` file.
+
+For example `test/fuzz/transformation_set_selection_control_test.cpp` contains tests for `TransformationSetSelectionControl`.  Your tests should aim to cover one example from each scenario where the transformation is inapplicable, and check that it is indeed deemed inapplicable, and then check that the transformation does the right thing when applied in a few different ways.
+
+For example, the tests for `TransformationSetSelectionControl` check that a transformation of this kind is inapplicable if the `block_id` field of the transformation is not a block, or does not end in `OpSelectionMerge`, or if the `selection_control` mask has an illegal value.  It also checks that applying a sequence of valid transformations to a SPIR-V shader leads to a shader with appropriately modified selection controls.
+
+## Adding a new fuzzer pass class
+
+A *fuzzer pass* traverses a SPIR-V module looking for places to apply a certain kind of transformation, and randomly decides at which of these points to actually apply the transformation.  It might be necessary to apply other transformations in order to apply a given transformation (for example, if a transformation requires a certain type to be present in the module, said type can be added if not already present via another transformation).
+
+A fuzzer pass implements the `FuzzerPass` interface, and overrides its `Apply` method.  If your fuzzer pass is named `FuzzerPassSomeThing` then it should be represented by `fuzzer_pass_some_thing.h` and `fuzzer_pass_some_thing.cpp`, under `source/fuzz`; these should be added to the associated `CMakeLists.txt` file.
+
+Have a look at the source filed for `FuzzerPassAdjustSelectionControls`.  This pass considers every block that ends with `OpSelectionMerge`.  It decides randomly whether to adjust the selection control of this merge instruction via:
+
+```
+if (!GetFuzzerContext()->ChoosePercentage(
+        GetFuzzerContext()->GetChanceOfAdjustingSelectionControl())) {
+  continue;
+}
+```
+
+The `GetChanceOfAddingSelectionControl()` method has been added to `FuzzerContext` specifically to support this pass, and returns a percentage between 0 and 100.  It returns the `chance_of_adjusting_selection_control_` of `FuzzerContext`, which is randomly initialized to lie with the interval defined by `kChanceOfAdjustingSelectionControl` in `fuzzer_context.cpp`.  For any pass you write, you will need to add an analogous `GetChanceOf...` method to `FuzzerContext`, backed by an appropriate field, and you will need to decide on lower and upper bounds for this field and specify these via a `kChanceOf...` constant.
+
+
+ This is the content for the doc docs/syntax.md 
+
+ # SPIR-V Assembly language syntax
+
+## Overview
+
+The assembly attempts to adhere to the binary form from Section 3 of the SPIR-V
+spec as closely as possible, with one exception aiming at improving the text's
+readability.  The `<result-id>` generated by an instruction is moved to the
+beginning of that instruction and followed by an `=` sign.  This allows us to
+distinguish between variable definitions and uses and locate value definitions
+more easily.
+
+Here is an example:
+
+```
+     OpCapability Shader
+     OpMemoryModel Logical Simple
+     OpEntryPoint GLCompute %3 "main"
+     OpExecutionMode %3 LocalSize 64 64 1
+%1 = OpTypeVoid
+%2 = OpTypeFunction %1
+%3 = OpFunction %1 None %2
+%4 = OpLabel
+     OpReturn
+     OpFunctionEnd
+```
+
+A module is a sequence of instructions, separated by whitespace.
+An instruction is an opcode name followed by operands, separated by
+whitespace.  Typically each instruction is presented on its own line,
+but the assembler does not enforce this rule.
+
+The opcode names and expected operands are described in Section 3 of
+the SPIR-V specification.  An operand is one of:
+* a literal integer: A decimal integer, or a hexadecimal integer.
+  A hexadecimal integer is indicated by a leading `0x` or `0X`.  A hex
+  integer supplied for a signed integer value will be sign-extended.
+  For example, `0xffff` supplied as the literal for an `OpConstant`
+  on a signed 16-bit integer type will be interpreted as the value `-1`.
+* a literal floating point number, in decimal or hexadecimal form.
+  See [below](#floats).
+* a literal string.
+   * A literal string is everything following a double-quote `"` until the
+     following un-escaped double-quote. This includes special characters such
+     as newlines.
+   * A backslash `\` may be used to escape characters in the string. The `\`
+     may be used to escape a double-quote or a `\` but is simply ignored when
+     preceding any other character.
+* a named enumerated value, specific to that operand position.  For example,
+  the `OpMemoryModel` takes a named Addressing Model operand (e.g. `Logical` or
+  `Physical32`), and a named Memory Model operand (e.g. `Simple` or `OpenCL`).
+  Named enumerated values are only meaningful in specific positions, and will
+  otherwise generate an error.
+* a mask expression, consisting of one or more mask enum names separated
+  by `|`.  For example, the expression `NotNaN|NotInf|NSZ` denotes the mask
+  which is the combination of the `NotNaN`, `NotInf`, and `NSZ` flags.
+* an injected immediate integer: `!<integer>`.  See [below](#immediate).
+* an ID, e.g. `%foo`. See [below](#id).
+* the name of an extended instruction.  For example, `sqrt` in an extended
+  instruction such as `%f = OpExtInst %f32 %OpenCLImport sqrt %arg`
+* the name of an opcode for OpSpecConstantOp, but where the `Op` prefix
+  is removed.  For example, the following indicates the use of an integer
+  addition in a specialization constant computation:
+  `%sum = OpSpecConstantOp %i32 IAdd %a %b`
+
+## ID Definitions & Usage
+<a name="id"></a>
+
+An ID _definition_ pertains to the `<result-id>` of an instruction, and ID
+_usage_ is a use of an ID as an input to an instruction.
+
+An ID in the assembly language begins with `%` and must be followed by a name
+consisting of one or more letters, numbers or underscore characters.
+
+For every ID in the assembly program, the assembler generates a unique number
+called the ID's internal number. Then each ID reference translates into its
+internal number in the SPIR-V output. Internal numbers are unique within the
+compilation unit: no two IDs in the same unit will share internal numbers.
+
+The disassembler generates IDs where the name is always a decimal number
+greater than 0.
+
+So the example can be rewritten using more user-friendly names, as follows:
+```
+          OpCapability Shader
+          OpMemoryModel Logical Simple
+          OpEntryPoint GLCompute %main "main"
+          OpExecutionMode %main LocalSize 64 64 1
+  %void = OpTypeVoid
+%fnMain = OpTypeFunction %void
+  %main = OpFunction %void None %fnMain
+%lbMain = OpLabel
+          OpReturn
+          OpFunctionEnd
+```
+
+## Floating point literals
+<a name="floats"></a>
+
+The assembler and disassembler support floating point literals in both
+decimal and hexadecimal form.
+
+The syntax for a floating point literal is the same as floating point
+constants in the C programming language, except:
+* An optional leading minus (`-`) is part of the literal.
+* An optional type specifier suffix is not allowed.
+Infinity and NaN values are expressed in hexadecimal float literals
+by using the maximum representable exponent for the bit width.
+
+For example, in 32-bit floating point, 8 bits are used for the exponent, and the
+exponent bias is 127.  So the maximum representable unbiased exponent is 128.
+Therefore, we represent the infinities and some NaNs as follows:
+
+```
+%float32 = OpTypeFloat 32
+%inf     = OpConstant %float32 0x1p+128
+%neginf  = OpConstant %float32 -0x1p+128
+%aNaN    = OpConstant %float32 0x1.8p+128
+%moreNaN = OpConstant %float32 -0x1.0002p+128
+```
+The assembler preserves all the bits of a NaN value.  For example, the encoding
+of `%aNaN` in the previous example is the same as the word with bits
+`0x7fc00000`, and `%moreNaN` is encoded as `0xff800100`.
+
+The disassembler prints infinite, NaN, and subnormal values in hexadecimal form.
+Zero and normal values are printed in decimal form with enough digits
+to preserve all significand bits.
+
+## Arbitrary Integers
+<a name="immediate"></a>
+
+When writing tests it can be useful to emit an invalid 32 bit word into the
+binary stream at arbitrary positions within the assembly. To specify an
+arbitrary word into the stream the prefix `!` is used, this takes the form
+`!<integer>`. Here is an example.
+
+```
+OpCapability !0x0000FF00
+```
+
+Any token in a valid assembly program may be replaced by `!<integer>` -- even
+tokens that dictate how the rest of the instruction is parsed.  Consider, for
+example, the following assembly program:
+
+```
+%4 = OpConstant %1 123 456 789 OpExecutionMode %2 LocalSize 11 22 33
+OpExecutionMode %3 InputLines
+```
+
+The tokens `OpConstant`, `LocalSize`, and `InputLines` may be replaced by random
+`!<integer>` values, and the assembler will still assemble an output binary with
+three instructions.  It will not necessarily be valid SPIR-V, but it will
+faithfully reflect the input text.
+
+You may wonder how the assembler recognizes the instruction structure (including
+instruction boundaries) in the text with certain crucial tokens replaced by
+arbitrary integers.  If, say, `OpConstant` becomes a `!<integer>` whose value
+differs from the binary representation of `OpConstant` (remember that this
+feature is intended for fine-grain control in SPIR-V testing), the assembler
+generally has no idea what that value stands for.  So how does it know there is
+exactly one `<id>` and three number literals following in that instruction,
+before the next one begins?  And if `LocalSize` is replaced by an arbitrary
+`!<integer>`, how does it know to take the next three tokens (instead of zero or
+one, both of which are possible in the absence of certainty that `LocalSize`
+provided)?  The answer is a simple rule governing the parsing of instructions
+with `!<integer>` in them:
+
+When a token in the assembly program is a `!<integer>`, that integer value is
+emitted into the binary output, and parsing proceeds differently than before:
+each subsequent token not recognized as an OpCode or a `<result-id>` is emitted
+into the binary output without any checking; when a recognizable OpCode or a
+`<result-id>` is eventually encountered, it begins a new instruction and parsing
+returns to normal.  (If a subsequent OpCode is never found, then this alternate
+parsing mode handles all the remaining tokens in the program.)
+
+The assembler processes the tokens encountered in alternate parsing mode as
+follows:
+
+* If the token is a number literal, since context may be lost, the number
+  is interpreted as a 32-bit value and output as a single word.  In order to
+  specify multiple-word literals in alternate-parsing mode, further uses of
+  `!<integer>` tokens may be required.
+  All formats supported by `strtoul()` are accepted.
+* If the token is a string literal, it outputs a sequence of words representing
+  the string as defined in the SPIR-V specification for Literal String.
+* If the token is an ID, it outputs the ID's internal number.
+* If the token is another `!<integer>`, it outputs that integer.
+* Any other token causes the assembler to quit with an error.
+
+Note that this has some interesting consequences, including:
+
+* When an OpCode is replaced by `!<integer>`, the integer value should encode
+  the instruction's word count, as specified in the physical-layout section of
+  the SPIR-V specification.
+
+* Consecutive instructions may have their OpCode replaced by `!<integer>` and
+  still produce valid SPIR-V.  For example, `!262187 %1 %2 "abc" !327739 %1 %3 6
+  %2` will successfully assemble into SPIR-V declaring a constant and a
+  PrivateGlobal variable.
+
+* Enums (such as `DontInline` or `SubgroupMemory`, for instance) are not handled
+  by the alternate parsing mode.  They must be replaced by `!<integer>` for
+  successful assembly.
+
+* The `<result-id>` on the left-hand side of an assignment cannot be a
+  `!<integer>`. The `<result-id>` can be still be manually controlled if desired
+  by expressing the entire instruction as `!<integer>` tokens for its opcode and
+  operands.
+
+* The `=` sign cannot be processed by the alternate parsing mode if the OpCode
+  following it is a `!<integer>`.
+
+* When replacing a named ID with `!<integer>`, it is possible to generate
+  unintentionally valid SPIR-V.  If the integer provided happens to equal a
+  number generated for an existing named ID, it will result in a reference to
+  that named ID being output.  This may be valid SPIR-V, contrary to the
+  presumed intention of the writer.
+
+## OpUnknown
+<a name="op-unknown"></a>
+
+HLSL has a feature that allows users to specify an exact SPIR-V type using [the
+`SpirvType` template](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0011-inline-spirv.md#types).
+This feature allows the user to specify a type opcode that the compiler does
+not know. In this case, it will be unable to generate assembly using the
+correct mnemonic.
+
+In order to represent unknown opcodes in assembly format, the `OpUnknown`
+pseudo-instruction may be used. The syntax is:
+
+```
+OpUnknown(<enumerant>, <WordCount>) <operand 1> ...
+```
+
+`enumerant` is the opcode enumerant, and `WordCount` is the number of words in
+the instruction. These will be assembled into a single word representing the
+opcode. Operands will be parsed according to the alternate parsing mode
+described in [Arbitrary Integers](#op-unknown). Named enumerated values cannot
+be handled by this mode and must be represented using the arbitrary integer
+syntax.
+
+It must be used at the beginning of a new instruction, and if there is a result
+ID it must explicitly be passed in as an operand. This is because the physical
+layout of a SPIR-V instruction may include a result type operand before the
+result ID operand, but it depends on the opcode and cannot be inferred for an
+unknown operand.
+
+For example, a 32-bit signed integer type could be represented like this:
+
+```
+OpUnknown(21, 4) %int_t 32 1
+```
+
+An OpStore instruction could be represented as:
+
+```
+OpUnknown(62, 3) %9 %12
+```
+
+The enumerant and word count must be decimal integers.
+
+
+## Notes
+
+* Some enumerants cannot be used by name, because the target instruction
+in which they are meaningful take an ID reference instead of a literal value.
+For example:
+   * Named enumerated value `CmdExecTime` from section 3.30 Kernel
+     Profiling Info is used in constructing a mask value supplied as
+     an ID for `OpCaptureEventProfilingInfo`.  But no other instruction
+     has enough context to bring the enumerant names from section 3.30
+     into scope.
+   * Similarly, the names in section 3.29 Kernel Enqueue Flags are used to
+     construct a value supplied as an ID to the Flags argument of
+     OpEnqueueKernel.
+   * Similarly for the names in section 3.25 Memory Semantics.
+   * Similarly for the names in section 3.27 Scope.
+* Some enumerants cannot be used by name, because they only name values
+returned by an instruction:
+   * Enumerants from 3.12 Image Channel Order name possible values returned
+     by the `OpImageQueryOrder` instruction.
+   * Enumerants from 3.13 Image Channel Data Type name possible values
+     returned by the `OpImageQueryFormat` instruction.
+
+
+ This is the content for the doc source/wasm/README.md 
+
+ # SPIRV-Tools
+
+Wasm (WebAssembly) build of https://github.com/KhronosGroup/SPIRV-Tools
+
+## Usage
+
+```js
+const spirvTools = require("spirv-tools");
+
+const test = async () => {
+  // Load the library
+  const spv = await spirvTools();
+
+  // assemble
+  const source = `
+             OpCapability Linkage 
+             OpCapability Shader 
+             OpMemoryModel Logical GLSL450 
+             OpSource GLSL 450 
+             OpDecorate %spec SpecId 1 
+      %int = OpTypeInt 32 1 
+     %spec = OpSpecConstant %int 0 
+    %const = OpConstant %int 42`;
+  const asResult = spv.as(
+    source,
+    spv.SPV_ENV_UNIVERSAL_1_3,
+    spv.SPV_TEXT_TO_BINARY_OPTION_NONE
+  );
+  console.log(`as returned ${asResult.byteLength} bytes`);
+
+  // re-disassemble
+  const disResult = spv.dis(
+    asResult,
+    spv.SPV_ENV_UNIVERSAL_1_3,
+    spv.SPV_BINARY_TO_TEXT_OPTION_INDENT |
+      spv.SPV_BINARY_TO_TEXT_OPTION_FRIENDLY_NAMES |
+      spv.SPV_BINARY_TO_TEXT_OPTION_COLOR
+  );
+  console.log("dis:\n", disResult);
+};
+
+test();
+```
+
+
+ This is the content for the doc test/diff/diff_files/README.md 
+
+ # Diff tests
+
+This directory contains files used to ensure correctness of the `spirv-diff` implementation.  The
+`generate_tests.py` script takes `name_src.spvasm` and `name_dst.spvasm` (for each `name`) and
+produces unit test files in the form of `name_autogen.cpp`.
+
+The unit test files test the diff between the src and dst inputs, as well as between debug-stripped
+versions of those.  Additionally, based on the `{variant}_TESTS` lists defined in
+`generate_tests.py`, extra unit tests are added to exercise different options of spirv-diff.
+
+New tests are added simply by placing a new `name_src.spvasm` and `name_dst.spvasm` pair in this
+directory and running `generate_tests.py`.  Note that this script needs the path to the spirv-diff
+executable that is built.
+
+The `generate_tests.py` script additionally expects `name_src.spvasm` to include a heading where the
+purpose of the test is explained.  This heading is parsed as a block of lines starting with `;;` at
+the top of the file.
+
+
+ This is the content for the doc tools/sva/README.md 
+
+ # SVA
+
+SPIR-V Assembler for WebGPU. The SPIR-V Assembler is a JavaScript library to
+convert SPIR-V assembly (as produced by spirv-dis in SPIR-V Tools) into a
+SPIR-V binary. The assembler assumes it is generating WebGPU SPIR-V and thus has
+the following limitations.
+
+ * Only 32 bit integers and floats supported
+ * Only GLSL accepted as an extended instruction set
+ * Doesn't support ! syntax for integers
+ * Doesn't support hex encoding for float
+
+```shell
+yarn install
+yarn test
+```
+
+You can also use `yarn watch` to watch all of the files and re-run tests as
+needed.
+
+## Webserver
+Using `yarn serve` will start a webserver on localhost:5000. If you load the
+`tests/index.html` file this will load the SVA files into browser.
+
+## Command Line
+There is a simple assembler binary with can be executed from the command line.
+
+```shell
+yarn sva tests/simple.spv_asm
+```
+
+The above will generate a `o.sva` file in the current directory.
+
+## Update spirv.data.json
+
+If there is a new spirv-headers release update the externals folder checkout
+and then:
+
+```shell
+./tools/process_grammar.rb > src/spirv.data.json
+```
+
+
+ This is the content for the doc utils/vim/README.md 
+
+ # Neovim configuration guide for SPIR-V disassembly files
+
+This directory holds instructions to configure Neovim for SPIR-V assembly files (`.spvasm`)
+
+At the end, Neovim should support:
+* Syntax highlighting
+* Jump to definition
+* Find all references
+* Symbol renaming
+* Operand hover information
+* Formatting
+* Completion suggestions for all Opcodes and Ids
+
+While the instructions here are specifically for Neovim, they should translate easily to vim.
+
+## Dependencies
+
+In order to build and install the Visual Studio Code language server extension, you will need to install and have on your `PATH` the following dependencies:
+* [`golang 1.16+`](https://golang.org/)
+
+## File type detection
+
+Neovim's default config location is typically `~/.config/nvim` so the rest of the instructions assume that but it will need to be changed if your system is different.
+
+Tell neovim that `*.spvasm` files should be treated as `spvasm` filetype
+```bash
+echo "au BufRead,BufNewFile *.spvasm                set filetype=spvasm" > ~/.config/nvim/ftdetect/spvasm.vim
+```
+
+## Syntax Highlighting
+
+### Generate the syntax highlighting file
+```bash
+cd <spirv-tools dir>
+mkdir -p build && cd build
+# Any platform is fine, ninja is used an as example
+cmake -G Ninja ..
+ninja spirv-tools-vimsyntax
+```
+
+### Copy the syntax file 
+```bash
+cp spvasm.vim ~/.config/nvim/syntax/spvasm.vim
+```
+
+## Language Server
+
+### Building the LSP (masOS / Linux)
+
+Run `build_lsp.sh`
+Copy `spirvls` and `spirv.json` to a location in `$PATH`
+
+```bash
+cd <spirv-tools dir>/utils/vscode
+./build_lsp.sh
+sudo cp spirvls/* /usr/local/bin/
+```
+
+### Building the LSP (Windows)
+
+TODO
+
+### Configuring Neovim
+
+Configuration will depend a lot on your installed plugins but assuming you are using [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) the following should be sufficient.
+
+```lua
+local lspconfig = require 'lspconfig'
+local configs = require 'lspconfig.configs'
+
+if not configs.spvasm then
+  configs.spvasm = {
+    default_config = {
+      cmd = { 'spirvls' },
+      filetypes = { 'spvasm' },
+      root_dir = function(fname)
+        return '.'
+      end,
+      settings = {},
+    },
+  }
+end
+
+lspconfig.spvasm.setup {
+  capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities()),
+}
+```
+
+
+ This is the content for the doc utils/vscode/README.md 
+
+ # Visual Studio Code extension for SPIR-V disassembly files
+
+This directory holds a Visual Studio Code language server extension for SPIR-V assembly files (`.spvasm`)
+
+The extension supports:
+* Syntax highlighting
+* Jump to definition
+* Find all references
+* Symbol renaming
+* Operand hover information
+* Formatting
+* Completion suggestions for all Opcodes and Ids
+
+## Dependencies
+
+In order to build and install the Visual Studio Code language server extension, you will need to install and have on your `PATH` the following dependencies:
+* [`npm`](https://www.npmjs.com/)
+* [`golang 1.16+`](https://golang.org/)
+
+## Installing (macOS / Linux)
+
+Run `install_vscode.sh`
+
+## Installing (Windows)
+
+Run `install_vscode.bat`
+
+
+ This is the content for the doc utils/vscode/src/lsp/README.md 
+
+ This directory contains code forked from https://github.com/golang/tools/tree/master/internal/lsp.
+
+This code has been modified to remove unneeded features and dependencies.
+
+Submitted on behalf of a third-party: The Go Authors
